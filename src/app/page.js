@@ -74,7 +74,6 @@ const ComparisonTable = () => (
             { name: 'Naive Bayes', acc: '97.68%', prec: '99%', rec: '92.5%', time: '95%' },
             { name: 'SVM', acc: '98.46%', prec: '98.0%', rec: '96.2%', time: '97%' },
             { name: 'Random Forest', acc: '97.5%', prec: '99.0%', rec: '93.3%', time: '96%' },
-          
           ].map((algo, i) => (
             <tr key={i} className={i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700'}>
               <td className="px-4 py-2 font-medium dark:text-white">{algo.name}</td>
@@ -130,12 +129,14 @@ const PerformanceMetrics = () => (
 );
 
 // Main Page component
-const Page = () => {
+export default function Page() {
   const [emailText, setEmailText] = useState('');
   const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const classifyEmail = async () => {
     if (!emailText) return;
+    setLoading(true);
     try {
       const response = await axios.post("https://email-spam-backend-6h8n.onrender.com/predict", {
         mail: emailText
@@ -143,9 +144,10 @@ const Page = () => {
       setResult(response.data?.prediction);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
-  
 
   return (
     <>
@@ -211,9 +213,18 @@ const Page = () => {
                 </div>
                 <button
                   onClick={classifyEmail}
-                  className="cyber-glow gradient-bg text-white px-6 py-3 rounded-md text-lg font-medium hover:opacity-90 transition transform hover:scale-105 w-full"
+                  className="cyber-glow gradient-bg text-white px-6 py-3 rounded-md text-lg font-medium hover:opacity-90 transition transform hover:scale-105 w-full flex justify-center items-center"
+                  disabled={loading}
                 >
-                  <i className="fas fa-search mr-2"></i> Check for Spam
+                  {loading ? (
+                    <svg className="animate-spin h-5 w-5 text-white mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                  ) : (
+                    <i className="fas fa-search mr-2"></i>
+                  )}
+                  {loading ? "Checking..." : "Check for Spam"}
                 </button>
               </div>
 
@@ -223,9 +234,10 @@ const Page = () => {
                   {result ? (
                     <div id="result-container" className="text-center py-12">
                       <i className={`fas fa-envelope text-5xl mb-4 ${result === 'Spam' ? 'text-red-500' : 'text-green-400'}`}></i>
-                      <h4 className={`text-3xl font-bold mb-4 ${result === 'Spam' ? 'text-red-500' : 'text-green-400'}`}>  {result}</h4>
-                        <p className={`text-base ${result === 'Spam' ? 'text-red-300' : 'text-green-200'}`}>
-                            This email was classified as <strong>{result}</strong> by our model.</p>
+                      <h4 className={`text-3xl font-bold mb-4 ${result === 'Spam' ? 'text-red-500' : 'text-green-400'}`}>{result}</h4>
+                      <p className={`text-base ${result === 'Spam' ? 'text-red-300' : 'text-green-200'}`}>
+                        This email was classified as <strong>{result}</strong> by our model.
+                      </p>
                     </div>
                   ) : (
                     <div id="empty-state" className="text-center py-12">
@@ -246,6 +258,4 @@ const Page = () => {
       </div>
     </>
   );
-};
-
-export default Page;
+}
